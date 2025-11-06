@@ -241,3 +241,24 @@ All colors MUST be HSL.
   background-size: 200% 200%;
   animation: bg-shift 8s ease-in-out infinite;
 }
+
+@keyframes dance-bot {
+  0% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-2px) rotate(-3deg); }
+  50% { transform: translateY(0) rotate(0deg); }
+  75% { transform: translateY(-2px) rotate(3deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+.animate-dance-bot {
+  animation: dance-bot 1.8s infinite ease-in-out;
+}
+@keyframes float {
+  0%   { transform: translateY(0px) rotate(0deg); }
+  50%  { transform: translateY(-8px) rotate(1deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.animate-float {
+  animation: float 3.5s ease-in-out infinite;
+}

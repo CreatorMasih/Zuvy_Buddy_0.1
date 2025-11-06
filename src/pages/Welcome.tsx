@@ -74,7 +74,7 @@ const Welcome = () => {
           
           {/* Description */}
           <p className="text-muted-foreground text-base lg:text-lg leading-relaxed mb-8 max-w-md lg:max-w-lg">
-            Ask Your Questions & Receive Articles Using Artificial Intelligence Assistant.
+            Designed to support your learning and work.
           </p>
 
           {/* Get Started Button */}

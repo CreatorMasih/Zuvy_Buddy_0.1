@@ -7,6 +7,18 @@ import Fuse from "fuse.js";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+function cleanMessage(msg = "") {
+  return msg
+    .replace(/<[^>]+>/g, " ")        // remove HTML tags
+    // .replace(/mailto:/gi, "")        // remove mailto:
+    .replace(/@/g, " @ ")            // readable email
+    .replace(/\.\./g, ".")           // remove double dots
+    .replace(/">/g, "")              // remove stray ">
+    .replace(/\n{2,}/g, "\n")        // collapse extra newlines
+    .trim();
+}
+
+
 /* ---------------- Google Apps Script URLs ---------------- */
 const GOOGLE_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbxfPh0XkA1rcZslA0-i_tuF6Rv6vy5tCGlWTvX5vh1qpLfztlDuqRFhKt0wrb_5WETB0Q/exec";
@@ -26,7 +38,7 @@ const MASTER_SCRIPT_URL =
 /* ---------------- AI (OpenRouter) ---------------- */
 const OPENROUTER_API_KEY =
   process.env.OPENROUTER_API_KEY ||
-  "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"; // move to .env later
+  "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"; // move to .env later
 
 const SUPPORTED_LANGS = new Set(["en",]); // English, Hindi, Marathi, Bengali, Tamil, Telugu
 const langDescriptor = (lang) => {
@@ -142,7 +154,12 @@ const fallbackText = (lang) =>
 async function getAIResponse({ userQuestion, faqContext = "", lang = "en" }) {
   const system = {
     role: "system",
-    content: `You are "Zuvy Buddy" 💚 — the friendly AI guide of NavGurukul & Zuvy Bootcamps.
+    content: `You are "Zuvy Buddy" — a friendly and professional support assistant for NavGurukul & Zuvy Bootcamps.
+- Maintain a warm and polite tone.
+- Do not use emojis.
+- Keep answers short (2–4 lines).
+- Always respond in clear English only.
+- Stay focused on topics related to NavGurukul, Zuvy Bootcamps, LMS, attendance, assessments, and partnerships.
 - Speak like a supportive mentor for students in India.
 - Always respond entirely in English, even if the user greets in Hindi or mixes languages.
 - Do not use words like "Namaste", "Aapka", "Dhanyavaad", or any Hindi greetings or text.
@@ -185,7 +202,31 @@ Both focus on inclusive, job-oriented education and digital learning for youth i
 
 
 /* ---------------- Middleware ---------------- */
-app.use(cors());
+// ✅ Full CORS fix for Render + Vercel
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    "https://zuvy-buddy-0-1.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:8080"
+  ];
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // ✅ Handle preflight (OPTIONS) request instantly
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
+app.use(bodyParser.json({ limit: "2mb" }));
 app.use(bodyParser.json());
 
 /* ---------------- Load FAQ (sheet) ---------------- */
@@ -242,7 +283,7 @@ const categoryHeader = (cat) =>
 
 const homeMenu = () => ({
   type: "options",
-  title: "🏠 Zuvy Buddy",
+  title: "Zuvy Buddy",
   message: "Choose a category 👇",
   options: [
     { label: "🎓 Existing Learner", value: "faq_menu_Existing Learner" },
@@ -437,7 +478,9 @@ function detectCommand(text = "") {
 
   return "faq_query";
 }
-
+app.get("/", (req, res) => {
+  res.send("✅ Zuvy Buddy API running successfully!");
+});
 app.post("/query", async (req, res) => {
   let { name = "Visitor", email = "", text = "", lang = "en" } = req.body || {};
 // const sessionKey = req.body.sessionId || email || name || (req.ip ? `ip:${req.ip}` : "anon");
@@ -1202,13 +1245,19 @@ if (
       return res.json({
         type: "faq",
         title: `💡 ${best.Question}`,
-        message: `
-          <div class='text-[15px] leading-relaxed'>
-            <p>${aiText}</p>
-            <div class='mt-3 text-sm text-muted-foreground'>
-              Need more help? <a href="mailto:join-zuvy@navgurukul.org">📧 join-zuvy@navgurukul.org</a>
-            </div>
-          </div>`,
+        // message: `
+        //   <div class='text-[15px] leading-relaxed'>
+        //     <p>${aiText}</p>
+        //     <div class='mt-3 text-sm text-muted-foreground'>
+        //       Need more help? <a href="mailto:join-zuvy@navgurukul.org">📧 join-zuvy@navgurukul.org</a>
+        //     </div>
+        //   </div>`,
+        // message: `${aiText}\n\nIf you need further help, you can email: join-zuvy@navgurukul.org`,
+        message: (`${aiText}
+
+<a href="mailto:join-zuvy@navgurukul.org" class="zuvy-email-btn">📧 Contact Support</a>`),
+
+        // message: `${aiText}\n\nIf you need further help, email at: mailto:join-zuvy@navgurukul.org`,
         options: [
           ...related.map((f) => ({
             label: f.Question,
@@ -1315,13 +1364,15 @@ if (
   return res.json({
     type: "faq",
     title: `💡 ${currentCategory}`,
-    message: `
-      <div class='text-[15px] leading-relaxed'>
-        <p>${aiText}</p>
-        <div class='mt-3 text-sm text-muted-foreground'>
-          Need more help? <a href="mailto:join-zuvy@navgurukul.org">📧 join-zuvy@navgurukul.org</a>
-        </div>
-      </div>`,
+    // message: `
+    //   <div class='text-[15px] leading-relaxed'>
+    //     <p>${aiText}</p>
+    //     <div class='mt-3 text-sm text-muted-foreground'>
+    //       Need more help? <a href="mailto:join-zuvy@navgurukul.org">📧 join-zuvy@navgurukul.org</a>
+    //     </div>
+    //   </div>`,
+    // message: "I couldn’t find an exact answer right now. Please email: join-zuvy@navgurukul.org",
+       message: cleanMessage("I couldn’t find an exact answer right now. Please email: join-zuvy@navgurukul.org"),
     options: [
       ...related.map((f) => ({
         label: f.Question,
@@ -1379,6 +1430,9 @@ if (
 process.on("unhandledRejection", (err) => console.error("❌ Unhandled:", err));
 
 /* ---------------- Start server ---------------- */
+// app.listen(PORT, () => {
+//   console.log(`✅ Chatbot API running at http://localhost:${PORT}`);
+// });
 app.listen(PORT, () => {
-  console.log(`✅ Chatbot API running at http://localhost:${PORT}`);
+  console.log(`✅ Chatbot API live on port ${PORT}`);
 });

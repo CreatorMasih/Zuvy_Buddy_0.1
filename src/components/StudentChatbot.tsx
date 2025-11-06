@@ -28,10 +28,15 @@ useEffect(() => {
   const [speakingEnabled, setSpeakingEnabled] = useState(speakingOn);
 
   // Keep speakingEnabled in sync with header (prop)
-  useEffect(() => {
-    setSpeakingEnabled(speakingOn);
-    if (!speakingOn) try { window.speechSynthesis.cancel(); } catch(e){}
-  }, [speakingOn]);
+  // useEffect(() => {
+  //   setSpeakingEnabled(speakingOn);
+  //   if (!speakingOn) try { window.speechSynthesis.cancel(); } catch(e){}
+  // }, [speakingOn]);
+  // ✅ Only set default value one time at load
+useEffect(() => {
+  setSpeakingEnabled(speakingOn);
+}, []); // ← dependency empty, so 1-time run only
+
 
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -79,36 +84,85 @@ useEffect(() => {
 
   // 🧠 Text-to-Speech (bot voice)
  // 🧠 Text-to-Speech (Improved voice)
-const speak = (text: string) => {
-  if (!speakingEnabled || !text) return;
+// const speak = (text: string) => {
+//   if (!speakingEnabled || !text) return;
 
-  // 🧹 Remove emojis and non-speech-friendly chars
-  const cleanText = text.replace(
+//   // 🧹 Remove emojis and non-speech-friendly chars
+//   const cleanText = text.replace(
+//     /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uFE0F)/g,
+//     ""
+//   );
+
+//   const utter = new SpeechSynthesisUtterance(cleanText.trim());
+//   utter.rate = 0.95; // Slightly slower for clarity
+//   utter.pitch = 1;
+//   utter.lang = "en-IN";
+
+//   // 🎙️ Prefer Indian Male voice if available
+//   const voices = window.speechSynthesis.getVoices();
+//   const indianMaleVoice =
+//     voices.find((v) =>
+//       /India/i.test(v.name) && /Male/i.test(v.name)
+//     ) ||
+//     voices.find((v) =>
+//       /Google हिन्दी|Google Indian English/i.test(v.name)
+//     ) ||
+//     voices.find((v) => /en-IN/i.test(v.lang));
+
+//   if (indianMaleVoice) utter.voice = indianMaleVoice;
+
+//   window.speechSynthesis.cancel();
+//   window.speechSynthesis.speak(utter);
+// };
+// 🔊 Text-to-Speech (HTML → friendly text)
+const speak = (raw: string) => {
+  if (!speakingEnabled || !raw) return;
+
+  // 1) HTML → plain text (safe)
+  let plain = "";
+  try {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = raw;
+    plain = (tmp.textContent || tmp.innerText || "").trim();
+  } catch {
+    // fallback: strip tags
+    plain = raw.replace(/<[^>]+>/g, " ");
+  }
+
+  // 2) Emails/URLs ko readable banao
+  plain = plain
+    .replace(/mailto:/gi, "")                              // remove "mailto:"
+    .replace(
+      /([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+)\.([A-Za-z]{2,})/g,
+      (_m, u, d, tld) => `${u} at ${d} dot ${tld}`         // email → "user at domain dot tld"
+    )
+    .replace(/https?:\/\/\S+/g, "")                        // URLs skip
+    // optional punctuation smoothing
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // 3) Emojis & misc cleanup
+  plain = plain.replace(
     /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uFE0F)/g,
     ""
   );
 
-  const utter = new SpeechSynthesisUtterance(cleanText.trim());
-  utter.rate = 0.95; // Slightly slower for clarity
+  const utter = new SpeechSynthesisUtterance(plain);
+  utter.rate = 0.95;
   utter.pitch = 1;
   utter.lang = "en-IN";
 
-  // 🎙️ Prefer Indian Male voice if available
   const voices = window.speechSynthesis.getVoices();
   const indianMaleVoice =
-    voices.find((v) =>
-      /India/i.test(v.name) && /Male/i.test(v.name)
-    ) ||
-    voices.find((v) =>
-      /Google हिन्दी|Google Indian English/i.test(v.name)
-    ) ||
-    voices.find((v) => /en-IN/i.test(v.lang));
-
+    voices.find(v => /India/i.test(v.name) && /Male/i.test(v.name)) ||
+    voices.find(v => /Google हिन्दी|Google Indian English/i.test(v.name)) ||
+    voices.find(v => /en-IN/i.test(v.lang));
   if (indianMaleVoice) utter.voice = indianMaleVoice;
 
-  window.speechSynthesis.cancel();
+  try { window.speechSynthesis.cancel(); } catch {}
   window.speechSynthesis.speak(utter);
 };
+
 
   // 🎙️ Voice Input (speech → text)
 const toggleListening = () => {
@@ -389,6 +443,7 @@ if (value && value.startsWith("lms_role_")) {
 
 
     // 🥉 3️⃣ FAQ MENUS (Bootcamps, Partnerships, Learners)
+    // 🥉 3️⃣ FAQ MENUS (Bootcamps, Partnerships, Learners)
     if (value.startsWith("faq_menu_")) {
       handleSendMessage(value);
       return;
@@ -560,7 +615,8 @@ const handleSendMessage = async (text: string) => {
   ]);
 
   try {
-    const res = await fetch("http://localhost:5000/query", {
+    // const res = await fetch("http://localhost:5000/query", {
+    const res = await fetch("https://zuvy-buddy-0-1.onrender.com/query", {
     //  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/query`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -718,7 +774,7 @@ if (!isShowMore) {
 
 
 
-    if (speakingEnabled) speak(data.voiceText || data.message);
+    // if (speakingEnabled) speak(data.voiceText || data.message);
   } catch (err) {
     console.error(err);
     setMessages((prev) => prev.filter((m) => !`${m.id}`.startsWith("t-")));
@@ -738,8 +794,9 @@ if (!isShowMore) {
 
   // 🌟 Save lead
   async function saveLeadToServer(name: string, email: string) {
-    const res = await fetch("http://localhost:5000/save-lead", {
-      method: "POST",
+    // const res = await fetch("http://localhost:5000/save-lead", {
+       const res = await fetch("https://zuvy-buddy-0-1.onrender.com/save-lead", {
+    method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, source: "chatbot" }),
     });
@@ -1017,16 +1074,24 @@ if (!isShowMore) {
                     title={speakingEnabled ? 'Mute' : 'Unmute'}
                     aria-label={speakingEnabled ? 'Mute bot' : 'Unmute bot'}
                     className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 shadow-lg focus:outline-none mb-2 ${speakingEnabled ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-card border border-border text-muted-foreground hover:bg-muted'}`}
+                    // onClick={() => {
+                    //   setSpeakingEnabled(v => {
+                    //     const newVal = !v;
+                    //     window.dispatchEvent(new CustomEvent('toggle_speaking'));
+                    //     if (!newVal) {
+                    //       try { window.speechSynthesis.cancel(); } catch(e){}
+                    //     }
+                    //     return newVal;
+                    //   });
+                    // }}
                     onClick={() => {
-                      setSpeakingEnabled(v => {
-                        const newVal = !v;
-                        window.dispatchEvent(new CustomEvent('toggle_speaking'));
-                        if (!newVal) {
-                          try { window.speechSynthesis.cancel(); } catch(e){}
-                        }
-                        return newVal;
-                      });
-                    }}
+  setSpeakingEnabled(v => {
+    const newVal = !v;
+    if (!newVal) { try { window.speechSynthesis.cancel(); } catch(e){} }
+    return newVal;
+  });
+}}
+
                   >
                     {speakingEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
                   </button>

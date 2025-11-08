@@ -162,6 +162,12 @@ const Index = () => {
               </button>
               <button
                 onClick={() => {
+                  // If we're still on the inline "Welcome to Zuvy Buddy" view,
+                  // send the user to the dedicated Welcome page
+                  if (!hasStarted) {
+                    navigate("/", { replace: true });
+                    return;
+                  }
                   setHasStarted(false);
                   window.dispatchEvent(new CustomEvent("reset_chat"));
                 }}
@@ -222,7 +228,7 @@ const Index = () => {
           {/* Bottom Hint Input: responsive sizing, visible only if sidebar is closed */}
           {!hasStarted && !sidebarOpen && (
             <div className="fixed bottom-3 left-0 right-0 flex justify-center z-40 md:left-72 md:right-6 lg:left-80 md:bottom-6">
-              <div className="pointer-events-none w-full max-w-xs sm:max-w-md md:max-w-2xl bg-background/80 border border-border rounded-2xl shadow-lg px-4 py-3 mx-auto"
+              <div className="pointer-events-none w-full max-w-xs sm:max-w-md md:max-w-2xl bg-gradient-to-r from-primary/20 to-accent/20 backdrop-blur-md border border-border rounded-2xl shadow-lg px-4 py-3 mx-auto"
                 style={{boxSizing:'border-box'}}>
                 <input
                   readOnly

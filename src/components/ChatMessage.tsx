@@ -300,7 +300,7 @@ export default function ChatMessage({ message, isBot }: any) {
 
   const wrapper = isBot ? "items-start" : "items-end flex justify-end";
   const bubbleBase =
-    "inline-block max-w-[95%] p-3 rounded-2xl break-words whitespace-pre-wrap";
+    "inline-block max-w-[95%] p-3 rounded-[22px] break-words whitespace-pre-wrap";
   const botStyle =
     "bg-card text-card-foreground border border-border";
   const userStyle = "bg-primary text-primary-foreground";

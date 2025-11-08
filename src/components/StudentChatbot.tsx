@@ -963,7 +963,7 @@ if (!isShowMore) {
             <button
               type="submit"
               disabled={!studentName || !studentEmail}
-              className="bg-gradient-to-r from-primary to-accent text-primary-foreground p-3 rounded-xl hover:shadow-lg transition disabled:opacity-50"
+              className="bg-gradient-to-r from-primary to-accent p-3 rounded-xl hover:shadow-lg transition disabled:opacity-50"
             >
               Start Chat
             </button>

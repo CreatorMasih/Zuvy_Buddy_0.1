@@ -976,7 +976,7 @@ if (!isShowMore) {
             <button
               type="submit"
               disabled={!studentName || !studentEmail}
-              className="bg-gradient-to-r from-primary to-accent text-primary-foreground p-3 rounded-xl hover:shadow-lg transition disabled:opacity-50"
+              className="bg-gradient-to-r from-primary to-accent p-3 rounded-xl hover:shadow-lg transition disabled:opacity-50"
             >
               Start Chat
             </button>
@@ -1086,7 +1086,7 @@ if (!isShowMore) {
                     tabIndex={0}
                     title={speakingEnabled ? 'Mute' : 'Unmute'}
                     aria-label={speakingEnabled ? 'Mute bot' : 'Unmute bot'}
-                    className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 shadow-lg focus:outline-none mb-2 ${speakingEnabled ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-card border border-border text-muted-foreground hover:bg-muted'}`}
+                    className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 shadow-lg focus:outline-none mb-2 ${speakingOn? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-card border border-border text-muted-foreground hover:bg-muted'}`}
                     // onClick={() => {
                     //   setSpeakingEnabled(v => {
                     //     const newVal = !v;
@@ -1097,16 +1097,18 @@ if (!isShowMore) {
                     //     return newVal;
                     //   });
                     // }}
-                    onClick={() => {
-  setSpeakingEnabled(v => {
-    const newVal = !v;
-    if (!newVal) { try { window.speechSynthesis.cancel(); } catch(e){} }
-    return newVal;
-  });
-}}
-
-                  >
-                    {speakingEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
+                   onClick={() => {
+                      window.dispatchEvent(new CustomEvent("toggle_speaking"));
+                     if (speakingOn) {
+                        try {
+                        window.speechSynthesis.cancel();
+                        } catch (e) {
+                        console.error("Speech stop error:", e);
+                        }
+                      }
+                     }}
+                    >
+                    {speakingOn ? <Volume2 size={24} /> : <VolumeX size={24} />}
                   </button>
                   {/* Mic Button - below speaker */}
                   <button

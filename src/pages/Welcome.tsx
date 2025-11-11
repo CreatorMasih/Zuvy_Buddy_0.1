@@ -16,9 +16,9 @@ const Welcome = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/10 flex flex-col items-center justify-center p-4">
       {/* Header - Hidden on desktop, visible on mobile */}
-      <div className="text-center mb-8 lg:hidden">
+      {/* <div className="text-center mb-8 lg:hidden">
         <h1 className="text-foreground text-2xl font-bold mb-2">Personal AI Buddy</h1>
-      </div>
+      </div> */}
 
       {/* Main Content */}
       <div className="flex flex-col lg:flex-row items-center justify-center flex-1 max-w-5xl mx-auto w-full gap-8 lg:gap-20">
@@ -37,9 +37,9 @@ const Welcome = () => {
               className="w-32 h-32 lg:w-[40rem] lg:h-[40rem] mx-auto object-contain animate-bounce-slow"
             /> */}
 {/* 🤖 Dancing 3D Zuvy Buddy */}
-<div className="relative flex items-center justify-center w-full h-[24rem]">
+<div className="relative flex items-center justify-center w-full h-[10rem]">
   {/* 🌈 Background Glow */}
-  <div className="absolute w-[340px] h-[340px] rounded-full bg-gradient-to-tr from-emerald-400/30 via-primary/20 to-transparent blur-3xl animate-bg-shift"></div>
+  <div className="absolute w-[250px] h-[250px] rounded-full bg-gradient-to-tr from-emerald-400/30 via-primary/20 to-transparent blur-3xl animate-bg-shift"></div>
 
   {/* 🤖 Robot Head with smooth rotation + float */}
   <img

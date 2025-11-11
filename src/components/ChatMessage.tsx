@@ -318,7 +318,7 @@ export default function ChatMessage({ message, isBot }: any) {
 
   const wrapper = isBot ? "items-start" : "items-end flex justify-end";
   const bubbleBase =
-    "inline-block max-w-[95%] p-3 rounded-2xl break-words whitespace-pre-wrap";
+    "inline-block max-w-[95%] p-3 rounded-[22px] break-words whitespace-pre-wrap";
   const botStyle =
     "bg-card text-card-foreground border border-border";
   const userStyle = "bg-primary text-primary-foreground";
@@ -355,9 +355,9 @@ const isEmptyText =
     <div className={`flex w-full ${wrapper} mb-2 animate-fade-in-up`}>
       {isBot && (
         <img
-          src="/robot_transparent_background.png"
+          src="/robot_transparent_background-removebg-preview.png"
           alt="Zuvy Bot"
-          className="w-8 h-8 mr-2 mt-1 rounded-full border border-gray-200 shadow-sm bg-white"
+          className="w-10 h-10 mr-2 mt-1 rounded-full border "
         />
       )}
 

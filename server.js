@@ -263,6 +263,10 @@ ${zuvyEN}
 ${navEN}
 `
 };
+  const user = {
+    role: "user",
+    content: `QUESTION: ${userQuestion}\nFAQ CONTEXT: ${faqContext || "None"}`,
+  };
 
   try {
     const out = await callOpenRouter([system, user]);
@@ -277,28 +281,52 @@ ${navEN}
 
 /* ---------------- Middleware ---------------- */
 // ✅ Full CORS fix for Render + Vercel
+// app.use((req, res, next) => {
+//   const allowedOrigins = [
+//     "https://zuvy-buddy-0-1.vercel.app",
+//     "http://localhost:5173",
+//     "http://localhost:8080"
+//   ];
+//   const origin = req.headers.origin;
+
+//   if (allowedOrigins.includes(origin)) {
+//     res.setHeader("Access-Control-Allow-Origin", origin);
+//   }
+
+//   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+//   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+//   // ✅ Handle preflight (OPTIONS) request instantly
+//   if (req.method === "OPTIONS") {
+//     return res.sendStatus(200);
+//   }
+
+//   next();
+// });
 app.use((req, res, next) => {
   const allowedOrigins = [
-    "https://zuvy-buddy-0-1.vercel.app",
+    "https://zuvy-buddy-0-1.vercel.app", // your frontend
+    "https://zuvy-buddy.vercel.app",     // fallback if vercel renames
+    "https://zuvy-buddy-0-1.onrender.com", // allow backend-to-backend
     "http://localhost:5173",
-    "http://localhost:8080"
+    "http://localhost:3000",
+    "http://localhost:8080",
   ];
-  const origin = req.headers.origin;
 
+  const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
 
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  // ✅ Handle preflight (OPTIONS) request instantly
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
-
   next();
 });
+
 
 app.use(bodyParser.json({ limit: "2mb" }));
 app.use(bodyParser.json());

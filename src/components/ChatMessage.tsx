@@ -338,9 +338,6 @@ export default function ChatMessage({ message, isBot }: any) {
   </div>
 `;
 
-
-  
-
   // 🧩 helper to decide when to show fallback
   // 🧠 Detect “Not Found” or “Email” type replies
 const isEmptyText =
@@ -404,73 +401,68 @@ const isEmptyText =
               justifyContent: "flex-start",
             }}
           >
-            <div
-  ref={msgRef}
-  className={`text-sm leading-relaxed ${type === "error" ? "text-destructive" : ""}`}
-  style={{ marginTop: "-6px" }}   // 👈 Removes extra white gap before button
-  dangerouslySetInnerHTML={{
-    __html: (isEmptyText ? fallbackHTML : text)
-      .replace(
-        /<a[^>]*href=["']mailto:([^"']+)["'][^>]*>(.*?)<\/a>/gi,
-        (_, email, label) => `
-          <div class="flex flex-col items-start justify-start text-left mt-2 mb-1">
-            <a 
-              href="mailto:${email}" 
-              class="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-md 
-                bg-gradient-to-r from-primary to-accent text-white font-medium text-xs shadow-sm 
-                hover:shadow-md hover:scale-[1.02] transition-all duration-200 focus:outline-none 
-                focus:ring-1 focus:ring-primary/40 no-underline"
-            >
-              📩 ${label || "Contact Support"}
-            </a>
-            <p class="text-[12px] text-muted-foreground mt-1 leading-snug opacity-80">
-              Our team is here to help 💚  
-              We usually reply within a few hours ⏱️
-            </p>
+          <div
+            ref={msgRef}
+            className={`text-sm leading-relaxed ${type === "error" ? "text-destructive" : ""}`}
+            style={{ marginTop: "-6px" }}   // 👈 Removes extra white gap before button
+            dangerouslySetInnerHTML={{
+             __html: (isEmptyText ? fallbackHTML : text)
+               .replace(
+                 /<a[^>]*href=["']mailto:([^"']+)["'][^>]*>(.*?)<\/a>/gi,
+                 (_, email, label) => `
+                 <div class="flex flex-col items-start justify-start text-left mt-2 mb-1">
+                  <a 
+                   href="mailto:${email}" 
+                   class="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-md 
+                   bg-gradient-to-r from-primary to-accent text-white font-medium text-xs shadow-sm 
+                   hover:shadow-md hover:scale-[1.02] transition-all duration-200 focus:outline-none 
+                   focus:ring-1 focus:ring-primary/40 no-underline"
+                   >
+                    📩 ${label || "Contact Support"}
+                 </a>
+                <p class="text-[12px] text-muted-foreground mt-1 leading-snug opacity-80">
+                   Our team is here to help  
+                   We usually reply within a few hours ⏱️
+                </p>
           </div>
         `
-      ),
-  }}
-/>
-
-          </div>
-        )}
-
-        {/* 🧩 Options */}
+           ),
+         }}
+        />
+      </div>
+    )}
+     {/* 🧩 Options */}
         {type === "options" && (
           <div className={`${bubbleBase} ${botStyle}`}>
             <div
               ref={msgRef}
               className="mb-2 text-sm"
-  dangerouslySetInnerHTML={{
-  __html: (isEmptyText ? fallbackHTML : text)
-    // 🎯 Compact mail button — no extra space
-    .replace(
-      /<a[^>]*href=["']mailto:([^"']+)["'][^>]*>(.*?)<\/a>/gi,
-      (_, email, label) => `
-        <div class="flex flex-col items-start justify-start text-left mt-2 mb-1">
-          <a 
-            href="mailto:${email}" 
-            class="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-md 
+              dangerouslySetInnerHTML={{
+              __html: (isEmptyText ? fallbackHTML : text)
+              // 🎯 Compact mail button — no extra space
+            .replace(
+              /<a[^>]*href=["']mailto:([^"']+)["'][^>]*>(.*?)<\/a>/gi,
+                (_, email, label) => `
+              <div class="flex flex-col items-start justify-start text-left mt-2 mb-1">
+              <a 
+               href="mailto:${email}" 
+              class="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-md 
               bg-gradient-to-r from-primary to-accent text-white font-medium text-xs shadow-sm 
               hover:shadow-md hover:scale-[1.02] transition-all duration-200 focus:outline-none 
               focus:ring-1 focus:ring-primary/40 no-underline"
-          >
-      ${label || "Contact Support"}
-</a>
-<p class="text-[12px] text-muted-foreground mt-1 leading-snug opacity-80">
-Our team is here to help 💚  
-We usually reply within a few hours ⏱️
-</p>
-</div>
+             >
+             ${label || "Contact Support"}
+            </a>
+             <p class="text-[12px] text-muted-foreground mt-1 leading-snug opacity-80">
+               Our team is here to help   
+               We usually reply within a few hours ⏱️
+              </p>
+            </div>
       `
-    ),
-}}
+              ),
+           }}
 
-
-
-
-            />
+          />
             <div className="flex flex-wrap gap-2">
               {(message.options ?? []).map((opt: any, i: number) => (
                 <button

@@ -36,23 +36,19 @@ const Welcome = () => {
               alt="Zuvy Logo"
               className="w-32 h-32 lg:w-[40rem] lg:h-[40rem] mx-auto object-contain animate-bounce-slow"
             /> */}
-{/* 🤖 Dancing 3D Zuvy Buddy */}
-<div className="relative flex items-center justify-center w-full h-[10rem]">
-  {/* 🌈 Background Glow */}
-  <div className="absolute w-[250px] h-[250px] rounded-full bg-gradient-to-tr from-emerald-400/30 via-primary/20 to-transparent blur-3xl animate-bg-shift"></div>
+         {/* 🤖 Dancing 3D Zuvy Buddy */}
+          <div className="relative flex items-center justify-center w-full h-[10rem]">
+             {/* 🌈 Background Glow */}
+            <div className="absolute w-[250px] h-[250px] rounded-full bg-gradient-to-tr from-emerald-400/30 via-primary/20 to-transparent blur-3xl animate-bg-shift"></div>
 
-  {/* 🤖 Robot Head with smooth rotation + float */}
-  <img
-    src="/robot_transparent_background-removebg-preview.png"
-    alt="Zuvy Buddy"
-    className="relative w-72 h-72 lg:w-[30rem] lg:h-[30rem] object-contain animate-float-rotate select-none pointer-events-none drop-shadow-[0_15px_30px_rgba(0,0,0,0.25)]"
-  />
-</div>
-
-
-
-
-          </div>
+              {/* 🤖 Robot Head with smooth rotation + float */}
+               <img
+                 src="/robot_transparent_background-removebg-preview.png"
+                 alt="Zuvy Buddy"
+                 className="relative w-72 h-72 lg:w-[30rem] lg:h-[30rem] object-contain animate-float-rotate select-none pointer-events-none drop-shadow-[0_15px_30px_rgba(0,0,0,0.25)]"
+               />
+            </div>
+         </div>
 
           {/* Title - Only visible on mobile */}
           <h2 className="text-foreground text-3xl font-bold mb-4 lg:hidden">Zuvy Buddy</h2>

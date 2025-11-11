@@ -33,11 +33,53 @@ const Index = () => {
     return () => clearInterval(interval);
   }, [hasStarted]);
 
+  // 🛑 Stop bot voice on any page navigation, refresh, back button, etc
+  useEffect(() => {
+    const cancelSpeech = () => {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
+    };
+
+    // Listen for page unload (refresh, close tab, navigate away)
+    window.addEventListener("beforeunload", cancelSpeech);
+    
+    // Listen for visibility changes (tab switch, minimize, etc)
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        cancelSpeech();
+      }
+    });
+
+    return () => {
+      window.removeEventListener("beforeunload", cancelSpeech);
+      document.removeEventListener("visibilitychange", cancelSpeech);
+    };
+  }, []);
+
   const handleStart = useCallback((detail: string) => {
+    // 🛑 Cancel any ongoing speech when switching sidebar sections
+    try {
+      window.speechSynthesis.cancel();
+    } catch (e) {}
+    
     setHasStarted(true);
     window.dispatchEvent(new CustomEvent("start_chat", { detail }));
     const anchor = document.getElementById("zuvy-main");
     if (anchor) anchor.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  // Toggle speaking and ensure any ongoing speech is stopped when muting
+  const toggleSpeaking = useCallback(() => {
+    setSpeakingOn((v) => {
+      const next = !v;
+      if (!next) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
+      }
+      return next;
+    });
   }, []);
 
   const LogoHeader = () => (
@@ -114,6 +156,11 @@ const Index = () => {
               </button>
               <button
                 onClick={() => {
+                  // 🛑 Stop bot voice when clicking Back
+                  try {
+                    window.speechSynthesis.cancel();
+                  } catch (e) {}
+                  
                   if (!hasStarted) {
                     navigate("/", { replace: true });
                     return;
@@ -133,11 +180,8 @@ const Index = () => {
               {hasStarted && (
                 <button
                   onClick={() => {
-                    setSpeakingOn((v) => {
-                      if (v) try { window.speechSynthesis.cancel(); } catch(e){}
-                      window.dispatchEvent(new CustomEvent("toggle_speaking"));
-                      return !v;
-                    });
+                    // toggle via single source of truth (Index)
+                    toggleSpeaking();
                   }}
                   className="p-2 rounded-full bg-muted hover:bg-muted/80 transition-all duration-200"
                   aria-label={speakingOn ? "Mute bot voice" : "Unmute bot voice"}
@@ -165,7 +209,7 @@ const Index = () => {
               </div>
             )}
             <div className="flex-1 flex flex-col min-h-0">
-              <StudentChatbot hideStartOptions hideWelcomeHero speakingOn={speakingOn} />
+              <StudentChatbot hideStartOptions hideWelcomeHero speakingOn={speakingOn} onToggleSpeaking={toggleSpeaking} />
             </div>
           </main>
 

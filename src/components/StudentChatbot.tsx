@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Mail, User, Mic, Volume2, VolumeX } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 //
@@ -16,9 +17,10 @@ type StudentChatbotProps = {
   hideStartOptions?: boolean;
   hideWelcomeHero?: boolean;
   speakingOn?: boolean;
+  onToggleSpeaking?: () => void;
 };
 
-export default function StudentChatbot({ hideStartOptions = false, hideWelcomeHero = false, speakingOn = true }: StudentChatbotProps) {
+export default function StudentChatbot({ hideStartOptions = false, hideWelcomeHero = false, speakingOn = true, onToggleSpeaking }: StudentChatbotProps) {
   // 🎯 States
   const [studentName, setStudentName] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
@@ -33,43 +35,26 @@ useEffect(() => {
   >(false);
   const [messages, setMessages] = useState<any[]>([]);
   const [listening, setListening] = useState(false);
-  const [speakingEnabled, setSpeakingEnabled] = useState(speakingOn);
-
-  // Keep speakingEnabled in sync with header (prop)
-  // useEffect(() => {
-  //   setSpeakingEnabled(speakingOn);
-  //   if (!speakingOn) try { window.speechSynthesis.cancel(); } catch(e){}
-  // }, [speakingOn]);
-  // ✅ Only set default value one time at load
-useEffect(() => {
-  setSpeakingEnabled(speakingOn);
-}, []); // ← dependency empty, so 1-time run only
-
+  // 💾 Store chat history per mode so switching sidebar doesn't lose chat
+  const [chatHistoryByMode, setChatHistoryByMode] = useState<Record<string, any[]>>({});
 
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const recognitionRef = useRef<any>(null);
-
-  // Sync speaker state if toggled anywhere
-  useEffect(() => {
-    const handleToggleSpeaking = () => {
-      setSpeakingEnabled((v) => {
-        const next = !v;
-        if (!next) {
-          try { window.speechSynthesis.cancel(); } catch{}
-        }
-        return next;
-      });
-    };
-    window.addEventListener("toggle_speaking", handleToggleSpeaking);
-    return () => window.removeEventListener("toggle_speaking", handleToggleSpeaking);
-  }, []);
+  // Note: speakingOn is a prop (single source of truth - Index). We rely on that prop
+  // to determine whether to speak. Any toggling action is forwarded via onToggleSpeaking.
 
   // Reset chat on global reset_chat event
   useEffect(() => {
     const handler = () => {
+      // 🛑 Stop any ongoing speech when reset happens
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
+      
       setIsChatStarted(false);
       setMessages([]);
+      setChatHistoryByMode({}); // 💾 Clear all saved chat history
       localStorage.removeItem("zuvy_session_started");
     };
     window.addEventListener("reset_chat", handler);
@@ -124,7 +109,7 @@ useEffect(() => {
 // };
 // 🔊 Text-to-Speech (HTML → friendly text)
 const speak = (raw: string) => {
-  if (!speakingEnabled || !raw) return;
+  if (!speakingOn || !raw) return;
 
   // 1) HTML → plain text (safe)
   let plain = "";
@@ -232,11 +217,11 @@ useEffect(() => {
         id: `contact-${Date.now()}`,
         sender: "bot",
         type: "text",
-        title: "Get in Touch 💌",
+        title: "Get in Touch",
         message: `
           <div class='flex flex-col items-start gap-4 text-[15px] leading-relaxed text-foreground bg-gradient-to-r from-secondary/20 to-accent/20 border border-border rounded-xl p-4 shadow-sm'>
             <div class='text-base font-semibold flex items-center gap-2'>
-              💌 We'd love to hear from you!
+               We'd love to hear from you!
             </div>
             <p class='text-[14px] text-muted-foreground'>
               Our support team will respond within a few hours. Click below to reach us directly:
@@ -252,8 +237,7 @@ useEffect(() => {
         `,
       };
       setMessages((prev) => [...prev, contactMsg]);
-      if (speakingEnabled)
-        speak("You can reach our team anytime at join zuvy at nav gurukul dot org.");
+      if (speakingOn) speak("You can reach our team anytime at join zuvy at nav gurukul dot org.");
       return; // stop here
     }
 
@@ -389,7 +373,7 @@ if (value && value.startsWith("lms_role_")) {
           <div class='flex flex-col items-start gap-4 text-[15px] leading-relaxed text-foreground bg-gradient-to-r from-secondary/20 to-accent/20 border border-border rounded-xl p-4 shadow-sm'>
             <div class='text-base font-semibold'>🪄 We'd love to hear your use case!</div>
             <p class='text-sm text-muted-foreground'>
-              Drop us an email and our team will connect with you 💚
+              Drop us an email and our team will connect with you 
             </p>
             <a
               href="mailto:join-zuvy@navgurukul.org?subject=Exploring%20Other%20LMS%20Solutions"
@@ -401,8 +385,7 @@ if (value && value.startsWith("lms_role_")) {
         `,
       };
       setMessages((prev) => [...prev, contactMsg]);
-      if (speakingEnabled)
-        speak("You can email our team at join zuvy at nav gurukul dot org to explore other LMS options.");
+      if (speakingOn) speak("You can email our team at join zuvy at nav gurukul dot org to explore other LMS options.");
       return;
   }
 
@@ -437,15 +420,14 @@ if (value && value.startsWith("lms_role_")) {
           href="mailto:join-zuvy@navgurukul.org?subject=Interested%20in%20LMS%20for%20${encodeURIComponent(roleLabel)}"
           class='inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg bg-gradient-to-r from-primary to-accent text-primary-foreground font-semibold text-sm shadow-md hover:shadow-lg hover:scale-[1.03] transition-all'
         >
-          💌 Contact Our Team
+          Contact Our Team
         </a>
       </div>
     `,
   };
 
   setMessages((prev) => [...prev, videoMsg]);
-  if (speakingEnabled)
-    speak(`Here’s an overview of the LMS for ${roleLabel}.`);
+  if (speakingOn) speak(`Here’s an overview of the LMS for ${roleLabel}.`);
   return;
 }
 
@@ -514,76 +496,106 @@ if (value === "show_more_faqs") {
 
   window.addEventListener("sendMessage", handler);
   return () => window.removeEventListener("sendMessage", handler);
-}, [studentEmail, isChatStarted]);
+}, [studentEmail, isChatStarted, speakingOn]);
 
 // 🧩 Sidebar triggers: mirror original button behaviors
 useEffect(() => {
   const startHandler = (e: any) => {
     const mode = (e?.detail || "").toString();
     if (!mode) return;
+    
+    // 💾 Save current chat history before switching modes
+    if (isChatStarted && messages.length > 0) {
+      setChatHistoryByMode((prev) => ({
+        ...prev,
+        [isChatStarted]: messages,
+      }));
+    }
+    
     if (mode === "student") {
       setIsChatStarted("student");
       localStorage.setItem("zuvy_session_started", "1");
-      setMessages([]);
+      // 📂 Restore chat history for this mode (if exists) or show welcome screen
+      const savedHistory = chatHistoryByMode["student"];
+      if (savedHistory && savedHistory.length > 0) {
+        setMessages(savedHistory);
+      } else {
+        setMessages([]);
+      }
       return;
     }
     if (mode === "learner") {
       setIsChatStarted("learner");
-      setMessages([
-        {
-          id: "bootcamp",
-          sender: "bot",
-          type: "options",
-          title: "💻 Explore Zuvy Bootcamps",
-          message:
-            "Hands-on programs in Full-Stack & DSA with placement support ",
-          options: [
-            { label: "📘 Bootcamp FAQs", value: "faq_menu_Explore Bootcamps" },
-            { label: "📧 Contact Us", value: "faq_menu_All" },
-          ],
-        },
-      ]);
+      const savedHistory = chatHistoryByMode["learner"];
+      if (savedHistory && savedHistory.length > 0) {
+        setMessages(savedHistory);
+      } else {
+        setMessages([
+          {
+            id: "bootcamp",
+            sender: "bot",
+            type: "options",
+            title: "💻 Explore Zuvy Bootcamps",
+            message:
+              "Hands-on programs in Full-Stack & DSA with placement support ",
+            options: [
+              { label: "📘 Bootcamp FAQs", value: "faq_menu_Explore Bootcamps" },
+              { label: "📧 Contact Us", value: "faq_menu_All" },
+            ],
+          },
+        ]);
+      }
       return;
     }
     if (mode === "business") {
       setIsChatStarted("business");
-      setMessages([
-        {
-          id: "business",
-          sender: "bot",
-          type: "options",
-          title: "🏢 LMS Solutions",
-          message: "Choose your role to explore LMS ",
-          options: [
-            { label: "🎓 As a Student", value: "lms_role_student" },
-            { label: "🧑‍💼 As an Admin", value: "lms_role_admin" },
-            { label: "👨‍🏫 As an Instructor", value: "lms_role_instructor" },
-            { label: "🪄 Others / Want to Explore Something Else", value: "lms_role_other" },
-          ],
-        },
-      ]);
+      const savedHistory = chatHistoryByMode["business"];
+      if (savedHistory && savedHistory.length > 0) {
+        setMessages(savedHistory);
+      } else {
+        setMessages([
+          {
+            id: "business",
+            sender: "bot",
+            type: "options",
+            title: "🏢 LMS Solutions",
+            message: "Choose your role to explore LMS ",
+            options: [
+              { label: "🎓 As a Student", value: "lms_role_student" },
+              { label: "🧑‍💼 As an Admin", value: "lms_role_admin" },
+              { label: "👨‍🏫 As an Instructor", value: "lms_role_instructor" },
+              { label: "🪄 Others / Want to Explore Something Else", value: "lms_role_other" },
+            ],
+          },
+        ]);
+      }
       return;
     }
     if (mode === "partner") {
       setIsChatStarted("partner");
-      setMessages([
-        {
-          id: "partner",
-          sender: "bot",
-          type: "options",
-          title: "🤝 Partnerships",
-          message: "For CSR Partners, Employers & Impact Collaborations ",
-          options: [
-            { label: "📘 Partnership FAQs", value: "faq_menu_Partnerships" },
-            { label: "📧 Contact Us", value: "faq_menu_All" },
-          ],
-        },
-      ]);
+      const savedHistory = chatHistoryByMode["partner"];
+      if (savedHistory && savedHistory.length > 0) {
+        setMessages(savedHistory);
+      } else {
+        setMessages([
+          {
+            id: "partner",
+            sender: "bot",
+            type: "options",
+            title: "🤝 Partnerships",
+            message: "For CSR Partners, Employers & Impact Collaborations ",
+            options: [
+              { label: "📘 Partnership FAQs", value: "faq_menu_Partnerships" },
+              { label: "📧 Contact Us", value: "faq_menu_All" },
+            ],
+          },
+        ]);
+      }
     }
   };
   window.addEventListener("start_chat", startHandler);
   return () => window.removeEventListener("start_chat", startHandler);
-}, []);
+}, [isChatStarted, messages, chatHistoryByMode]);
 
 
   // 🎓 Start chat for learner
@@ -626,6 +638,13 @@ const handleSendMessage = async (text: string) => {
   { id: `u-${Date.now()}`, sender: "user", type: "text", message: cleanLabel(text) },
   { id: `t-${Date.now()}`, sender: "bot", type: "typing", message: "/Chat.mp4" },
 ]);
+
+  // If the bot is muted, show a small toast so the user knows voice is off
+  if (!speakingOn) {
+    try {
+      toast({ title: "🔇 Bot voice is muted — tap speaker to unmute." });
+    } catch (e) {}
+  }
 
   try {
     // const res = await fetch("http://localhost:5000/query", {
@@ -676,7 +695,7 @@ const handleSendMessage = async (text: string) => {
         `,
       };
       setMessages((prev) => [...prev, fallbackMsg]);
-      if (speakingEnabled)
+      if (speakingOn)
         speak("Hmm, I couldn’t find an exact answer right now. But no worries — our support team is happy to help you!");
       return;
     }
@@ -768,7 +787,7 @@ if (!isShowMore) {
   setMessages((prev) => [...prev, botResponse]);
 
   // 🗣️ Voice output
-  if (speakingEnabled) speak(data.voiceText || data.message);
+  if (speakingOn) speak(data.voiceText || data.message);
 
   // 💡 Save remaining FAQs (optional)
   (window as any)._remainingFAQs = remaining;
@@ -782,7 +801,7 @@ if (!isShowMore) {
     message: data.message || "",
   };
   setMessages((prev) => [...prev, botResponse]);
-  if (speakingEnabled) speak(data.voiceText || data.message);
+  if (speakingOn) speak(data.voiceText || data.message);
 }
 
 
@@ -801,7 +820,7 @@ if (!isShowMore) {
           "⚠️ Something went wrong. Try again or email join-zuvy@navgurukul.org",
       },
     ]);
-    speak("Something went wrong. Please try again later.");
+    if (speakingOn) speak("Something went wrong. Please try again later.");
   }
 };
 
@@ -1084,30 +1103,14 @@ if (!isShowMore) {
                   {/* Speaker (mute/unmute) */}
                   <button
                     tabIndex={0}
-                    title={speakingEnabled ? 'Mute' : 'Unmute'}
-                    aria-label={speakingEnabled ? 'Mute bot' : 'Unmute bot'}
+                    title={speakingOn ? 'Mute' : 'Unmute'}
+                    aria-label={speakingOn ? 'Mute bot' : 'Unmute bot'}
                     className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 shadow-lg focus:outline-none mb-2 ${speakingOn? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-card border border-border text-muted-foreground hover:bg-muted'}`}
-                    // onClick={() => {
-                    //   setSpeakingEnabled(v => {
-                    //     const newVal = !v;
-                    //     window.dispatchEvent(new CustomEvent('toggle_speaking'));
-                    //     if (!newVal) {
-                    //       try { window.speechSynthesis.cancel(); } catch(e){}
-                    //     }
-                    //     return newVal;
-                    //   });
-                    // }}
-                   onClick={() => {
-                      window.dispatchEvent(new CustomEvent("toggle_speaking"));
-                     if (speakingOn) {
-                        try {
-                        window.speechSynthesis.cancel();
-                        } catch (e) {
-                        console.error("Speech stop error:", e);
-                        }
-                      }
-                     }}
-                    >
+                    onClick={() => {
+                      // Delegate toggle to parent (Index) single source of truth
+                      try { onToggleSpeaking?.(); } catch(e) {}
+                    }}
+                  >
                     {speakingOn ? <Volume2 size={24} /> : <VolumeX size={24} />}
                   </button>
                   {/* Mic Button - below speaker */}

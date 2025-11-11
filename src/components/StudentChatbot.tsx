@@ -4,6 +4,14 @@ import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 //
 
+function cleanLabel(label: string = "") {
+  return label
+    .replace(/^faq_query_/i, "")
+    .replace(/\|\|\|ctx:.*/i, "")
+    .replace(/_/g, " ")
+    .trim();
+}
+
 type StudentChatbotProps = {
   hideStartOptions?: boolean;
   hideWelcomeHero?: boolean;
@@ -471,7 +479,7 @@ if (value === "show_more_faqs") {
       id: `more-${Date.now()}`,
       sender: "bot",
       type: "options",
-      title: "More FAQs for you 👇",
+      title: "More FAQs for you ",
       message: "Here are more helpful questions:",
       options: remaining,
     },
@@ -493,7 +501,7 @@ if (value === "show_more_faqs") {
           type: "text",
           title: "💡 Ask a question",
           message:
-            "You can ask anything about Bootcamps, LMS or Partnerships. Type below 👇",
+            "You can ask anything about Bootcamps, LMS or Partnerships. Type below ",
         },
       ]);
       setTimeout(() => inputRef.current?.focus(), 100);
@@ -528,7 +536,7 @@ useEffect(() => {
           type: "options",
           title: "💻 Explore Zuvy Bootcamps",
           message:
-            "Hands-on programs in Full-Stack & DSA with placement support 👇",
+            "Hands-on programs in Full-Stack & DSA with placement support ",
           options: [
             { label: "📘 Bootcamp FAQs", value: "faq_menu_Explore Bootcamps" },
             { label: "📧 Contact Us", value: "faq_menu_All" },
@@ -545,7 +553,7 @@ useEffect(() => {
           sender: "bot",
           type: "options",
           title: "🏢 LMS Solutions",
-          message: "Choose your role to explore LMS 👇",
+          message: "Choose your role to explore LMS ",
           options: [
             { label: "🎓 As a Student", value: "lms_role_student" },
             { label: "🧑‍💼 As an Admin", value: "lms_role_admin" },
@@ -564,7 +572,7 @@ useEffect(() => {
           sender: "bot",
           type: "options",
           title: "🤝 Partnerships",
-          message: "For CSR Partners, Employers & Impact Collaborations 👇",
+          message: "For CSR Partners, Employers & Impact Collaborations ",
           options: [
             { label: "📘 Partnership FAQs", value: "faq_menu_Partnerships" },
             { label: "📧 Contact Us", value: "faq_menu_All" },
@@ -592,8 +600,8 @@ useEffect(() => {
         id: "welcome",
         sender: "bot",
         type: "options",
-        title: `Hi ${studentName}! 👋`,
-        message: "Welcome back! Choose an option 👇",
+        title: `Hi ${studentName}!`,
+        message: "Welcome back! Choose an option ",
         options: [
           { label: "📚 Attendance", value: "attendance_menu" },
           { label: "🧾 Assessments", value: "assessment_menu" },
@@ -608,11 +616,16 @@ const handleSendMessage = async (text: string) => {
   if (!text) return;
 
   // Show user message + typing animation
+  // setMessages((prev) => [
+  //   ...prev,
+  //   { id: `u-${Date.now()}`, sender: "user", type: "text", message: text },
+  //   { id: `t-${Date.now()}`, sender: "bot", type: "typing", message: "/Chat.mp4" },
+  // ]);
   setMessages((prev) => [
-    ...prev,
-    { id: `u-${Date.now()}`, sender: "user", type: "text", message: text },
-    { id: `t-${Date.now()}`, sender: "bot", type: "typing", message: "/Chat.mp4" },
-  ]);
+  ...prev,
+  { id: `u-${Date.now()}`, sender: "user", type: "text", message: cleanLabel(text) },
+  { id: `t-${Date.now()}`, sender: "bot", type: "typing", message: "/Chat.mp4" },
+]);
 
   try {
     // const res = await fetch("http://localhost:5000/query", {
@@ -827,14 +840,14 @@ if (!isShowMore) {
 
           <h2 className="text-2xl font-bold text-center">Welcome to Zuvy Buddy</h2>
           <p className="text-muted-foreground text-center max-w-sm">
-            {/* How can I help you today? 👇 */}
+            {/* How can I help you today?  */}
              <span className="inline-block animate-[fadeIn_0.3s_ease-in-out_0s_forwards] opacity-0">How</span>{" "}
             <span className="inline-block animate-[fadeIn_0.3s_ease-in-out_0.1s_forwards] opacity-0">can</span>{" "}
             <span className="inline-block animate-[fadeIn_0.3s_ease-in-out_0.2s_forwards] opacity-0">I</span>{" "}
             <span className="inline-block animate-[fadeIn_0.3s_ease-in-out_0.3s_forwards] opacity-0">help</span>{" "}
             <span className="inline-block animate-[fadeIn_0.3s_ease-in-out_0.4s_forwards] opacity-0">you</span>{" "}
             <span className="inline-block animate-[fadeIn_0.3s_ease-in-out_0.5s_forwards] opacity-0">today?</span>{" "}
-            <span className="inline-block animate-[fadeIn_0.3s_ease-in-out_0.6s_forwards] opacity-0">👇</span>
+            <span className="inline-block animate-[fadeIn_0.3s_ease-in-out_0.6s_forwards] opacity-0"></span>
           </p>
 
       {!hideStartOptions && (
@@ -857,7 +870,7 @@ if (!isShowMore) {
                     type: "options",
                     title: "💻 Explore Zuvy Bootcamps",
                     message:
-                      "Hands-on programs in Full-Stack & DSA with placement support 👇",
+                      "Hands-on programs in Full-Stack & DSA with placement support ",
                     options: [
                       { label: "📘 Bootcamp FAQs", value: "faq_menu_Explore Bootcamps" },
                       { label: "📧 Contact Us", value: "faq_menu_All" },
@@ -880,7 +893,7 @@ if (!isShowMore) {
                 sender: "bot",
                 type: "options",
                 title: "🏢 LMS Solutions",
-                message: "Choose your role to explore LMS 👇",
+                message: "Choose your role to explore LMS ",
                 options: [
                  { label: "🎓 As a Student", value: "lms_role_student" },
                  { label: "🧑‍💼 As an Admin", value: "lms_role_admin" },
@@ -906,7 +919,7 @@ if (!isShowMore) {
                     type: "options",
                     title: "🤝 Partnerships",
                     message:
-                      "For CSR Partners, Employers & Impact Collaborations 👇",
+                      "For CSR Partners, Employers & Impact Collaborations ",
                     options: [
                   { label: "📘 Partnership FAQs", value: "faq_menu_Partnerships" },
                   { label: "📧 Contact Us", value: "faq_menu_All" },

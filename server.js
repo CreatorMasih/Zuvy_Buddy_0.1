@@ -2,6 +2,24 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import Fuse from "fuse.js";
+import fs from "fs";
+
+// Website Context (Loaded once)
+let zuvyEN = "";
+let zuvyTR = "";
+let navEN = "";
+let navTR = "";
+
+try {
+  zuvyEN = fs.readFileSync("./data/zuvy_en.txt", "utf8");
+  zuvyTR = fs.readFileSync("./data/zuvy_tr.txt", "utf8");
+  navEN = fs.readFileSync("./data/navgurukul_en.txt", "utf8");
+  navTR = fs.readFileSync("./data/navgurukul_tr.txt", "utf8");
+  console.log("✅ Website context loaded.");
+} catch (err) {
+  console.log("⚠️ Website context files missing. Will continue without them.");
+}
+
 // import fetch from "node-fetch"; // Uncomment if Node < 18
 
 const app = express();
@@ -151,51 +169,107 @@ const fallbackText = (lang) =>
 //     return fallbackText(lang);
 //   }
 // }
+// async function getAIResponse({ userQuestion, faqContext = "", lang = "en" }) {
+//   const system = {
+//     role: "system",
+//     content: `You are "Zuvy Buddy" — a friendly and professional support assistant for NavGurukul & Zuvy Bootcamps.
+// - Maintain a warm and polite tone.
+// - Do not use emojis.
+// - Keep answers short (2–4 lines).
+// - Always respond in clear English only.
+// - Stay focused on topics related to NavGurukul, Zuvy Bootcamps, LMS, attendance, assessments, and partnerships.
+// - Speak like a supportive mentor for students in India.
+// - Always respond entirely in English, even if the user greets in Hindi or mixes languages.
+// - Do not use words like "Namaste", "Aapka", "Dhanyavaad", or any Hindi greetings or text.
+// - Keep answers short (2–4 lines), clear, and encouraging.
+// - Primarily talk about NavGurukul, Zuvy Bootcamps, LMS, attendance, assessments, or partnerships.
+// - If the question is about NavGurukul or Zuvy team, founders, or purpose — answer confidently.
+// - If the question is not about NavGurukul, Zuvy Bootcamps, LMS, attendance, assessments, or partnerships, reply gently and briefly.
+// - Politely say that you’re focused on helping with NavGurukul and Zuvy-related topics, without sounding dismissive or rude.
+// - Example: “That’s an interesting question! I usually help with NavGurukul and Zuvy Bootcamp queries. Would you like to know something about that?”
+// - Language: English (India). All responses should be in English only.
+// - Never try to explain or define unrelated general topics (like weather, science, movies, or general knowledge).
+// - If the user asks about something unrelated, do not define or explain it. Just respond softly and redirect to NavGurukul or Zuvy Bootcamps.
+// - Example: “That’s an interesting question! I usually help with NavGurukul and Zuvy Bootcamp queries 💚 Would you like to know more about that?”
+// `,
+//   };
+
+//   const globalFacts = `
+// NavGurukul is a non-profit organization founded by Abhishek Gupta and Rishabh Verma.
+// As of 2024, Nidhi Anarkat is the CEO of NavGurukul.
+// Zuvy is an initiative by NavGurukul led by Co-Founder & CEO Sandhya Dittakavi.
+// Both focus on inclusive, job-oriented education and digital learning for youth in India.
+// `;
+
+//   const user = {
+//     role: "user",
+//     content:
+//       `${globalFacts}\n\nQUESTION: ${userQuestion}\n` +
+//       `KNOWN CONTEXT (from FAQ; may be empty): ${faqContext || "None"}`,
+//   };
+
+//   try {
+//     const out = await callOpenRouter([system, user]);
+//     return out || fallbackText(lang);
+//   } catch (e) {
+//     console.error("❌ OpenRouter error:", e);
+//     return fallbackText(lang);
+//   }
+// }
 async function getAIResponse({ userQuestion, faqContext = "", lang = "en" }) {
   const system = {
-    role: "system",
-    content: `You are "Zuvy Buddy" — a friendly and professional support assistant for NavGurukul & Zuvy Bootcamps.
-- Maintain a warm and polite tone.
-- Do not use emojis.
-- Keep answers short (2–4 lines).
-- Always respond in clear English only.
-- Stay focused on topics related to NavGurukul, Zuvy Bootcamps, LMS, attendance, assessments, and partnerships.
-- Speak like a supportive mentor for students in India.
-- Always respond entirely in English, even if the user greets in Hindi or mixes languages.
-- Do not use words like "Namaste", "Aapka", "Dhanyavaad", or any Hindi greetings or text.
-- Keep answers short (2–4 lines), clear, and encouraging.
-- Primarily talk about NavGurukul, Zuvy Bootcamps, LMS, attendance, assessments, or partnerships.
-- If the question is about NavGurukul or Zuvy team, founders, or purpose — answer confidently.
-- If the question is not about NavGurukul, Zuvy Bootcamps, LMS, attendance, assessments, or partnerships, reply gently and briefly.
-- Politely say that you’re focused on helping with NavGurukul and Zuvy-related topics, without sounding dismissive or rude.
-- Example: “That’s an interesting question! I usually help with NavGurukul and Zuvy Bootcamp queries. Would you like to know something about that?”
-- Language: English (India). All responses should be in English only.
-- Never try to explain or define unrelated general topics (like weather, science, movies, or general knowledge).
-- If the user asks about something unrelated, do not define or explain it. Just respond softly and redirect to NavGurukul or Zuvy Bootcamps.
-- Example: “That’s an interesting question! I usually help with NavGurukul and Zuvy Bootcamp queries 💚 Would you like to know more about that?”
-`,
-  };
+  role: "system",
+  content: `
+You are "Zuvy Buddy" — the official support assistant for NavGurukul & Zuvy Bootcamps.
 
-  const globalFacts = `
-NavGurukul is a non-profit organization founded by Abhishek Gupta and Rishabh Verma.
-As of 2024, Nidhi Anarkat is the CEO of NavGurukul.
-Zuvy is an initiative by NavGurukul led by Co-Founder & CEO Sandhya Dittakavi.
-Both focus on inclusive, job-oriented education and digital learning for youth in India.
-`;
+🎯 Your purpose:
+To explain programs, processes, expectations, roles, and support details clearly and confidently.
 
-  const user = {
-    role: "user",
-    content:
-      `${globalFacts}\n\nQUESTION: ${userQuestion}\n` +
-      `KNOWN CONTEXT (from FAQ; may be empty): ${faqContext || "None"}`,
-  };
+🧭 Tone:
+- Professional and supportive
+- Simple and friendly language
+- No emojis
+- No slang
+- No unnecessary appreciation phrases like “That’s correct”, “Exactly”, “Right!”, etc.
+
+📏 Response Length:
+- 2 to 4 short sentences.
+- No long paragraphs.
+- No bullet lists unless necessary for clarity.
+
+🔍 Knowledge Priority:
+1) If FAQ context exists → Use it directly and rephrase clearly.
+2) If FAQ context is weak → Use website knowledge below.
+3) If still unclear → Say you are not fully certain and suggest email support (no guessing).
+
+🛑 Never Do:
+- Never invent missing information.
+- Never guess numbers, dates, rules, or internal reasons.
+- Never confirm or validate user statements.
+- Never explain unrelated topics.
+
+🌐 Always respond in:
+English (India) only.
+
+### Website Knowledge:
+Zuvy (summary):
+${zuvyTR}
+
+NavGurukul (summary):
+${navTR}
+
+If deeper detail is needed:
+${zuvyEN}
+${navEN}
+`
+};
 
   try {
     const out = await callOpenRouter([system, user]);
-    return out || fallbackText(lang);
+    return out || "I couldn't find a complete answer. You may contact join-zuvy@navgurukul.org";
   } catch (e) {
-    console.error("❌ OpenRouter error:", e);
-    return fallbackText(lang);
+    console.error("❌ AI error:", e);
+    return "I couldn't fetch a response right now. Please email join-zuvy@navgurukul.org";
   }
 }
 
@@ -284,7 +358,7 @@ const categoryHeader = (cat) =>
 const homeMenu = () => ({
   type: "options",
   title: "Zuvy Buddy",
-  message: "Choose a category 👇",
+  message: "Choose a category",
   options: [
     { label: "🎓 Existing Learner", value: "faq_menu_Existing Learner" },
     { label: "💻 Explore Bootcamps", value: "faq_menu_Explore Bootcamps" },
@@ -562,7 +636,7 @@ if (cmd === "home_menu") {
   return res.json({
     type: "options",
     title: "🏠 Welcome to Zuvy Buddy",
-    message: "How can I help you today? 👇",
+    message: "How can I help you today? ",
     options: [
       { label: "🎓 Existing Learner", value: "faq_menu_Existing Learner" },
       { label: "💻 Explore Bootcamps", value: "faq_menu_Explore Bootcamps" },
@@ -753,7 +827,7 @@ if (cmd.startsWith("faq_show_more_")) {
   return res.json({
     type: "options",
     title: `💬 More ${category} FAQs`,
-    message: "Here are more helpful questions 👇",
+    message: "Here are more helpful questions ",
     // options: [...options, { label: "🏠 Home", value: "home_menu" }],
     options,
   });
@@ -805,7 +879,7 @@ if (cmd.startsWith("faq_show_more_")) {
     return res.json({
       type: "options",
       title: categoryHeader(category),
-      message: "Choose a question 👇",
+      message: "Choose a question ",
       // options: [...options, { label: "🏠 Home", value: "home_menu" }],
       options,
     });
@@ -853,7 +927,7 @@ if (cmd.startsWith("faq_show_more_")) {
     return res.json({
       type: "options",
       title: categoryHeader(category),
-      message: "Choose a question 👇",
+      message: "Choose a question ",
       // options: [...options, { label: "🏠 Home", value: "home_menu" }],
       options,
     });
@@ -1142,7 +1216,7 @@ if (
     message: `
       <div class='text-[15px] leading-relaxed'>
         <p>I’m here to help with <b>NavGurukul</b> and <b>Zuvy Bootcamps</b> queries.</p>
-        <p class='mt-2'>Your question seems outside my scope. You can still reach our team 👇</p>
+        <p class='mt-2'>Your question seems outside my scope. You can still reach our team </p>
         <a href="mailto:join-zuvy@navgurukul.org"
            class="inline-block mt-2 px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-accent text-primary-foreground text-sm shadow-md">📧 Email Support</a>
       </div>`,

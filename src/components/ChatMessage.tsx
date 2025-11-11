@@ -235,11 +235,26 @@ function safeGet(obj: any, keys: string[]) {
       if (v !== undefined && v !== null && v !== "") return v;
     }
   }
+  function cleanLabel(label = "") {
+  return label
+    .replace(/^faq_query_/i, "")        // remove prefix
+    .replace(/\|\|\|ctx:.*/i, "")       // remove context tail
+    .replace(/_/g, " ")                 // underscores → spaces
+    .trim();
+}
+
   return undefined;
 }
 
 export default function ChatMessage({ message, isBot }: any) {
   const { theme } = useTheme();
+  function cleanLabel(label = "") {
+  return label
+    .replace(/^faq_query_/i, "")        // remove prefix
+    .replace(/\|\|\|ctx:.*/i, "")       // remove ctx part
+    .replace(/_/g, " ")                 // replace underscores with spaces
+    .trim();
+}
   if (!message) return null;
     // ✅ Fix mailto links & video-block buttons inside rendered HTML
   const msgRef = React.useRef<HTMLDivElement>(null);
@@ -281,10 +296,13 @@ export default function ChatMessage({ message, isBot }: any) {
 
   const type = message.type ?? "text";
   const rawTitle = message.title ?? "";
-  const text = message.message ?? message.msg ?? message.text ?? "";
-
+  // const text = message.message ?? message.msg ?? message.text ?? "";
+     const rawText = message.message ?? message.msg ?? message.text ?? "";
+     const text = cleanLabel(rawText);
   // 🧹 Clean & hide unwanted titles
-  let title = rawTitle.replace(
+  // let title = rawTitle.replace(
+  let title = cleanLabel(rawTitle).replace(
+
     /([\u2700-\u27BF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uFE0F)/g,
     ""
   );
@@ -460,10 +478,12 @@ We usually reply within a few hours ⏱️
                   onClick={() => clickOption(opt.value)}
                   className="px-3 py-1 rounded-md bg-gradient-to-r from-primary to-accent text-primary-foreground text-sm hover:opacity-90 shadow-md transition"
                 >
-                  {opt.label.replace(
+                  {/* {opt.label.replace(
                     /([\u2700-\u27BF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uFE0F)/g,
                     ""
-                  )}
+                  )} */}
+                  {cleanLabel(opt.label)}
+
                 </button>
               ))}
             </div>

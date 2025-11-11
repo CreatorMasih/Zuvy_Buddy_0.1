@@ -337,9 +337,9 @@ const isEmptyText =
     <div className={`flex w-full ${wrapper} mb-2 animate-fade-in-up`}>
       {isBot && (
         <img
-          src="/robot_transparent_background.png"
+          src="/robot_transparent_background-removebg-preview.png"
           alt="Zuvy Bot"
-          className="w-8 h-8 mr-2 mt-1 rounded-full border border-gray-200 shadow-sm bg-white"
+          className="w-10 h-10 mr-2 mt-1 rounded-full border "
         />
       )}
 

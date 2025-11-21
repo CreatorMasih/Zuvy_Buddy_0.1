@@ -799,6 +799,9 @@ if (!isShowMore) {
     type: data.type || "text",
     title: data.title || "",
     message: data.message || "",
+    fields: Array.isArray(data.fields) ? data.fields : undefined,
+    rows: Array.isArray(data.rows) ? data.rows : undefined,
+    summary: data.summary,
   };
   setMessages((prev) => [...prev, botResponse]);
   if (speakingOn) speak(data.voiceText || data.message);

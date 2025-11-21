@@ -511,6 +511,29 @@ const isEmptyText =
             )}
           </div>
         )}
+        {/* 📊 Table Report */}
+        {type === "table" && (
+          <div className={`${bubbleBase} ${botStyle}`}>
+            <div className="mb-2 text-sm font-medium">{title}</div>
+            <div className="text-sm leading-relaxed mb-2">{text}</div>
+            <table className="w-full border-collapse border border-border text-sm">
+              <thead>
+                {/* <tr>
+                  <th className="border border-border px-2 py-1 text-left">Field</th>
+                  <th className="border border-border px-2 py-1 text-left">Value</th>
+                </tr> */}
+              </thead>
+              <tbody>
+                {(message.fields ?? []).map((fields: any, index: number) => (
+                  <tr key={index}>
+                    <td className="border border-border px-2 py-1">{fields.name}</td>
+                    <td className="border border-border px-2 py-1">{fields.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
